@@ -1,6 +1,5 @@
 // ==================== AUTHENTICATION ====================
 
-// Check auth state
 auth.onAuthStateChanged(user => {
     const authButton = document.getElementById('auth-button');
     if (authButton) {
@@ -15,7 +14,6 @@ auth.onAuthStateChanged(user => {
     updateCartCount();
 });
 
-// Show login modal
 function showLoginModal() {
     const modal = document.getElementById('auth-modal');
     if (modal) {
@@ -25,7 +23,6 @@ function showLoginModal() {
     }
 }
 
-// Create auth modal
 function createAuthModal() {
     const modal = document.createElement('div');
     modal.id = 'auth-modal';
@@ -51,12 +48,10 @@ function createAuthModal() {
     
     document.body.appendChild(modal);
     
-    // Close modal
     modal.querySelector('.close').onclick = () => {
         modal.style.display = 'none';
     };
     
-    // Login handler
     document.getElementById('login-btn').onclick = () => {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -69,14 +64,12 @@ function createAuthModal() {
             .catch(error => alert('Login failed: ' + error.message));
     };
     
-    // Register handler
     document.getElementById('register-btn').onclick = () => {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         
         auth.createUserWithEmailAndPassword(email, password)
             .then(userCredential => {
-                // Create user profile
                 db.collection('users').doc(userCredential.user.uid).set({
                     email: email,
                     createdAt: new Date(),
@@ -93,7 +86,6 @@ function createAuthModal() {
 
 // ==================== PROJECTS ====================
 
-// Load projects
 function loadProjects() {
     const projectList = document.getElementById('project-list');
     if (!projectList) return;
@@ -128,7 +120,6 @@ function loadProjects() {
         });
 }
 
-// View project
 function viewProject(projectId) {
     window.location.href = `project-detail.html?id=${projectId}`;
 }
@@ -137,20 +128,17 @@ function viewProject(projectId) {
 
 let cart = [];
 
-// Load cart
 function loadCart() {
     const saved = localStorage.getItem('cart');
     cart = saved ? JSON.parse(saved) : [];
     updateCartCount();
 }
 
-// Save cart
 function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
 }
 
-// Add to cart
 function addToCart(projectId) {
     if (!auth.currentUser) {
         alert('Please login to add items to cart');
@@ -180,14 +168,12 @@ function addToCart(projectId) {
         });
 }
 
-// Remove from cart
 function removeFromCart(projectId) {
     cart = cart.filter(item => item.id !== projectId);
     saveCart();
     if (typeof displayCart === 'function') displayCart();
 }
 
-// Update cart count
 function updateCartCount() {
     document.querySelectorAll('#cart-count').forEach(el => {
         el.textContent = cart.length;
