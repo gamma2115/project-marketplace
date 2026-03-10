@@ -32,13 +32,11 @@
             <button class="tab-btn" onclick="showTab('profile')">Profile</button>
         </div>
         
-        <!-- Buyer Tab -->
         <div id="buyer-tab" class="tab-content active">
             <h2>My Orders</h2>
             <div id="orders-list" class="loading">Loading orders...</div>
         </div>
         
-        <!-- Seller Tab -->
         <div id="seller-tab" class="tab-content">
             <h2>My Projects</h2>
             <button onclick="showSellForm()" class="btn-primary">Sell New Project</button>
@@ -51,17 +49,14 @@
                         <label>Project Title:</label>
                         <input type="text" id="title" required>
                     </div>
-                    
                     <div class="form-group">
                         <label>Description:</label>
                         <textarea id="description" required></textarea>
                     </div>
-                    
                     <div class="form-group">
                         <label>Price ($):</label>
                         <input type="number" id="price" step="0.01" required>
                     </div>
-                    
                     <div class="form-group">
                         <label>Category:</label>
                         <select id="category" required>
@@ -72,19 +67,16 @@
                             <option value="Programming">Programming</option>
                         </select>
                     </div>
-                    
                     <div class="form-group">
                         <label>Project Image:</label>
                         <input type="file" id="image" accept="image/*" required>
                     </div>
-                    
                     <button type="submit" class="btn-primary">List Project</button>
                     <button type="button" onclick="hideSellForm()">Cancel</button>
                 </form>
             </div>
         </div>
         
-        <!-- Profile Tab -->
         <div id="profile-tab" class="tab-content">
             <h2>Profile Settings</h2>
             <form id="profile-form" class="sell-form">
@@ -92,12 +84,10 @@
                     <label>Display Name:</label>
                     <input type="text" id="display-name">
                 </div>
-                
                 <div class="form-group">
                     <label>Bio:</label>
                     <textarea id="bio"></textarea>
                 </div>
-                
                 <button type="submit" class="btn-primary">Update Profile</button>
             </form>
         </div>
@@ -105,7 +95,6 @@
 
     <script src="script.js"></script>
     <script>
-        // Check authentication
         auth.onAuthStateChanged(user => {
             if (!user) {
                 window.location.href = 'index.html';
@@ -116,23 +105,19 @@
             }
         });
 
-        // Logout
         document.getElementById('logout-btn').onclick = () => {
             auth.signOut().then(() => {
                 window.location.href = 'index.html';
             });
         };
 
-        // Tab switching
         function showTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
             document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
 
-        // Load user data
         function loadUserData(user) {
             db.collection('users').doc(user.uid).get()
                 .then(doc => {
@@ -143,20 +128,14 @@
                 });
         }
 
-        // Load orders
         function loadOrders(user) {
-            const ordersList = document.getElementById('orders-list');
-            
-            db.collection('orders')
-                .where('buyerId', '==', user.uid)
-                .orderBy('createdAt', 'desc')
-                .get()
+            db.collection('orders').where('buyerId', '==', user.uid).orderBy('createdAt', 'desc').get()
                 .then(querySnapshot => {
+                    const ordersList = document.getElementById('orders-list');
                     if (querySnapshot.empty) {
                         ordersList.innerHTML = '<p>No orders yet.</p>';
                         return;
                     }
-                    
                     ordersList.innerHTML = '';
                     querySnapshot.forEach(doc => {
                         const order = doc.data();
@@ -167,26 +146,21 @@
                                     <p>Total: $${order.total} | Items: ${order.items.length}</p>
                                     <p>Date: ${order.createdAt.toDate().toLocaleDateString()}</p>
                                 </div>
-                                <span class="status-${order.status}">${order.status}</span>
+                                <span>${order.status}</span>
                             </div>
                         `;
                     });
                 });
         }
 
-        // Load my projects
         function loadMyProjects(user) {
-            const projectsList = document.getElementById('my-projects');
-            
-            db.collection('projects')
-                .where('sellerId', '==', user.uid)
-                .get()
+            db.collection('projects').where('sellerId', '==', user.uid).get()
                 .then(querySnapshot => {
+                    const projectsList = document.getElementById('my-projects');
                     if (querySnapshot.empty) {
                         projectsList.innerHTML = '<p>You haven\'t listed any projects yet.</p>';
                         return;
                     }
-                    
                     projectsList.innerHTML = '';
                     querySnapshot.forEach(doc => {
                         const project = doc.data();
@@ -204,7 +178,6 @@
                 });
         }
 
-        // Show/hide sell form
         function showSellForm() {
             document.getElementById('sell-form-container').style.display = 'block';
         }
@@ -213,32 +186,22 @@
             document.getElementById('sell-form-container').style.display = 'none';
         }
 
-        // Handle project listing
         document.getElementById('sell-project-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const user = auth.currentUser;
-            if (!user) return;
-            
-            const title = document.getElementById('title').value;
-            const description = document.getElementById('description').value;
-            const price = parseFloat(document.getElementById('price').value);
-            const category = document.getElementById('category').value;
-            const imageFile = document.getElementById('image').files[0];
             
             try {
-                // Upload image
+                const imageFile = document.getElementById('image').files[0];
                 const imageRef = storage.ref(`projects/${user.uid}/${Date.now()}_image`);
                 await imageRef.put(imageFile);
                 const imageUrl = await imageRef.getDownloadURL();
                 
-                // Save project
                 await db.collection('projects').add({
-                    title,
-                    description,
-                    price,
-                    category,
-                    imageUrl,
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    price: parseFloat(document.getElementById('price').value),
+                    category: document.getElementById('category').value,
+                    imageUrl: imageUrl,
                     sellerId: user.uid,
                     sellerName: user.email,
                     downloads: 0,
@@ -248,14 +211,12 @@
                 alert('Project listed successfully!');
                 hideSellForm();
                 loadMyProjects(user);
-                
             } catch (error) {
                 console.error('Error:', error);
                 alert('Error listing project. Please try again.');
             }
         });
 
-        // Delete project
         function deleteProject(projectId) {
             if (confirm('Delete this project?')) {
                 db.collection('projects').doc(projectId).delete()
@@ -266,12 +227,9 @@
             }
         }
 
-        // Update profile
         document.getElementById('profile-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const user = auth.currentUser;
-            db.collection('users').doc(user.uid).update({
+            db.collection('users').doc(auth.currentUser.uid).update({
                 displayName: document.getElementById('display-name').value,
                 bio: document.getElementById('bio').value
             }).then(() => {
