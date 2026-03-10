@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - ProjectMarket</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="logo">ProjectMarket</h1>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+                <button id="auth-button" class="btn-primary">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="cart-page">
+        <h1>Shopping Cart</h1>
+        
+        <div class="cart-container">
+            <div class="cart-items">
+                <h2>Cart Items</h2>
+                <div id="cart-items">
+                    <!-- Cart items will be displayed here -->
+                </div>
+            </div>
+            
+            <div class="cart-summary">
+                <h2>Order Summary</h2>
+                <div id="cart-total" style="font-size: 1.5rem; margin: 20px 0;">Total: $0.00</div>
+                <button onclick="checkout()" class="btn-primary" style="width: 100%; padding: 15px;">Proceed to Checkout</button>
+                <a href="index.html" style="display: block; text-align: center; margin-top: 20px;">← Continue Shopping</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        // Display cart
+        function displayCart() {
+            const cartContainer = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<p class="loading">Your cart is empty</p>';
+                cartTotal.textContent = 'Total: $0.00';
+                return;
+            }
+            
+            cartContainer.innerHTML = '';
+            let total = 0;
+            
+            cart.forEach(item => {
+                total += parseFloat(item.price) || 0;
+                cartContainer.innerHTML += `
+                    <div class="cart-item">
+                        <div>
+                            <h4>${item.title}</h4>
+                            <p>Seller: ${item.sellerName || 'Unknown'}</p>
+                        </div>
+                        <div>
+                            <span class="price">$${parseFloat(item.price).toFixed(2)}</span>
+                            <button onclick="removeFromCart('${item.id}')" class="btn-remove">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartTotal.textContent = `Total: $${total.toFixed(2)}`;
+        }
+
+        // Checkout
+        function checkout() {
+            if (!auth.currentUser) {
+                alert('Please login to checkout');
+                showLoginModal();
+                return;
+            }
+            
+            if (cart.length === 0) {
+                alert('Your cart is empty');
+                return;
+            }
+            
+            const order = {
+                buyerId: auth.currentUser.uid,
+                buyerEmail: auth.currentUser.email,
+                items: cart,
+                total: cart.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0),
+                status: 'pending',
+                createdAt: new Date()
+            };
+            
+            db.collection('orders').add(order)
+                .then(() => {
+                    alert('Order placed successfully!');
+                    cart = [];
+                    saveCart();
+                    window.location.href = 'dashboard.html';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error placing order. Please try again.');
+                });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', displayCart);
+    </script>
+</body>
+</html>
