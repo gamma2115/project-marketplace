@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ProjectMarket</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="logo">ProjectMarket</h1>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+                <button id="logout-btn" class="btn-primary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard">
+        <h1>Dashboard</h1>
+        
+        <div class="dashboard-tabs">
+            <button class="tab-btn active" onclick="showTab('buyer')">Buyer</button>
+            <button class="tab-btn" onclick="showTab('seller')">Seller</button>
+            <button class="tab-btn" onclick="showTab('profile')">Profile</button>
+        </div>
+        
+        <!-- Buyer Tab -->
+        <div id="buyer-tab" class="tab-content active">
+            <h2>My Orders</h2>
+            <div id="orders-list" class="loading">Loading orders...</div>
+        </div>
+        
+        <!-- Seller Tab -->
+        <div id="seller-tab" class="tab-content">
+            <h2>My Projects</h2>
+            <button onclick="showSellForm()" class="btn-primary">Sell New Project</button>
+            <div id="my-projects" class="project-grid"></div>
+            
+            <div id="sell-form-container" style="display: none; margin-top: 30px;">
+                <h3>Sell New Project</h3>
+                <form id="sell-project-form" class="sell-form">
+                    <div class="form-group">
+                        <label>Project Title:</label>
+                        <input type="text" id="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <textarea id="description" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Price ($):</label>
+                        <input type="number" id="price" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Category:</label>
+                        <select id="category" required>
+                            <option value="">Select Category</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Mobile Development">Mobile Development</option>
+                            <option value="Design">Design</option>
+                            <option value="Programming">Programming</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Project Image:</label>
+                        <input type="file" id="image" accept="image/*" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">List Project</button>
+                    <button type="button" onclick="hideSellForm()">Cancel</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Profile Tab -->
+        <div id="profile-tab" class="tab-content">
+            <h2>Profile Settings</h2>
+            <form id="profile-form" class="sell-form">
+                <div class="form-group">
+                    <label>Display Name:</label>
+                    <input type="text" id="display-name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Bio:</label>
+                    <textarea id="bio"></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary">Update Profile</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        // Check authentication
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                loadUserData(user);
+                loadOrders(user);
+                loadMyProjects(user);
+            }
+        });
+
+        // Logout
+        document.getElementById('logout-btn').onclick = () => {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        };
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        // Load user data
+        function loadUserData(user) {
+            db.collection('users').doc(user.uid).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        document.getElementById('display-name').value = doc.data().displayName || '';
+                        document.getElementById('bio').value = doc.data().bio || '';
+                    }
+                });
+        }
+
+        // Load orders
+        function loadOrders(user) {
+            const ordersList = document.getElementById('orders-list');
+            
+            db.collection('orders')
+                .where('buyerId', '==', user.uid)
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.empty) {
+                        ordersList.innerHTML = '<p>No orders yet.</p>';
+                        return;
+                    }
+                    
+                    ordersList.innerHTML = '';
+                    querySnapshot.forEach(doc => {
+                        const order = doc.data();
+                        ordersList.innerHTML += `
+                            <div class="cart-item">
+                                <div>
+                                    <h4>Order #${doc.id.slice(0, 8)}</h4>
+                                    <p>Total: $${order.total} | Items: ${order.items.length}</p>
+                                    <p>Date: ${order.createdAt.toDate().toLocaleDateString()}</p>
+                                </div>
+                                <span class="status-${order.status}">${order.status}</span>
+                            </div>
+                        `;
+                    });
+                });
+        }
+
+        // Load my projects
+        function loadMyProjects(user) {
+            const projectsList = document.getElementById('my-projects');
+            
+            db.collection('projects')
+                .where('sellerId', '==', user.uid)
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.empty) {
+                        projectsList.innerHTML = '<p>You haven\'t listed any projects yet.</p>';
+                        return;
+                    }
+                    
+                    projectsList.innerHTML = '';
+                    querySnapshot.forEach(doc => {
+                        const project = doc.data();
+                        projectsList.innerHTML += `
+                            <div class="project-card">
+                                <img src="${project.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${project.title}">
+                                <h4>${project.title}</h4>
+                                <p>${project.description.substring(0, 100)}...</p>
+                                <p class="price">$${project.price}</p>
+                                <p>Downloads: ${project.downloads || 0}</p>
+                                <button onclick="deleteProject('${doc.id}')">Delete</button>
+                            </div>
+                        `;
+                    });
+                });
+        }
+
+        // Show/hide sell form
+        function showSellForm() {
+            document.getElementById('sell-form-container').style.display = 'block';
+        }
+
+        function hideSellForm() {
+            document.getElementById('sell-form-container').style.display = 'none';
+        }
+
+        // Handle project listing
+        document.getElementById('sell-project-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const price = parseFloat(document.getElementById('price').value);
+            const category = document.getElementById('category').value;
+            const imageFile = document.getElementById('image').files[0];
+            
+            try {
+                // Upload image
+                const imageRef = storage.ref(`projects/${user.uid}/${Date.now()}_image`);
+                await imageRef.put(imageFile);
+                const imageUrl = await imageRef.getDownloadURL();
+                
+                // Save project
+                await db.collection('projects').add({
+                    title,
+                    description,
+                    price,
+                    category,
+                    imageUrl,
+                    sellerId: user.uid,
+                    sellerName: user.email,
+                    downloads: 0,
+                    createdAt: new Date()
+                });
+                
+                alert('Project listed successfully!');
+                hideSellForm();
+                loadMyProjects(user);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error listing project. Please try again.');
+            }
+        });
+
+        // Delete project
+        function deleteProject(projectId) {
+            if (confirm('Delete this project?')) {
+                db.collection('projects').doc(projectId).delete()
+                    .then(() => {
+                        alert('Project deleted!');
+                        loadMyProjects(auth.currentUser);
+                    });
+            }
+        }
+
+        // Update profile
+        document.getElementById('profile-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const user = auth.currentUser;
+            db.collection('users').doc(user.uid).update({
+                displayName: document.getElementById('display-name').value,
+                bio: document.getElementById('bio').value
+            }).then(() => {
+                alert('Profile updated!');
+            });
+        });
+    </script>
+</body>
+</html>
