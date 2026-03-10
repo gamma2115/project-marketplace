@@ -1,12 +1,12 @@
-// 🔴 IMPORTANT: Replace with your Firebase configuration
-// Get this from: Firebase Console → Project Settings → General → Your apps → Firebase SDK snippet
+// Your Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBlM_v4vvD3ZPxhOkFn5AKtUMHSPMC1raQ",
+  authDomain: "data-749fe.firebaseapp.com",
+  projectId: "data-749fe",
+  storageBucket: "data-749fe.firebasestorage.app",
+  messagingSenderId: "736965464474",
+  appId: "1:736965464474:web:773ba43c6a313c43b62a23",
+  measurementId: "G-GRT97061FG"
 };
 
 // Initialize Firebase
