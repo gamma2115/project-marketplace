@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Details - ProjectMarket</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .project-detail {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .project-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .project-image img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .project-info h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .project-price {
+            font-size: 2rem;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .btn-buy, .btn-cart {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+        
+        .btn-buy {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-cart {
+            background: #3498db;
+            color: white;
+        }
+        
+        .project-description {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="logo">ProjectMarket</h1>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+                <button id="auth-button" class="btn-primary">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="project-detail">
+        <div id="project-container" class="loading">Loading project details...</div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        const projectId = new URLSearchParams(window.location.search).get('id');
+        
+        function loadProjectDetail() {
+            const container = document.getElementById('project-container');
+            
+            if (!projectId) {
+                container.innerHTML = '<p>Project not found.</p>';
+                return;
+            }
+            
+            db.collection('projects').doc(projectId).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        container.innerHTML = '<p>Project not found.</p>';
+                        return;
+                    }
+                    
+                    const project = doc.data();
+                    
+                    container.innerHTML = `
+                        <div class="project-header">
+                            <div class="project-image">
+                                <img src="${project.imageUrl || 'https://via.placeholder.com/600x400'}" alt="${project.title}">
+                            </div>
+                            <div class="project-info">
+                                <h1>${project.title}</h1>
+                                <p class="project-price">$${project.price}</p>
+                                <p>Sold by: ${project.sellerName || 'Unknown'}</p>
+                                <p>Category: ${project.category || 'Uncategorized'}</p>
+                                <p>Downloads: ${project.downloads || 0}</p>
+                                <div style="margin-top: 30px;">
+                                    <button onclick="buyNow('${doc.id}')" class="btn-buy">Buy Now</button>
+                                    <button onclick="addToCart('${doc.id}')" class="btn-cart">Add to Cart</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-description">
+                            <h2>Description</h2>
+                            <p>${project.description || 'No description available.'}</p>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    container.innerHTML = '<p>Error loading project. Please try again.</p>';
+                });
+        }
+        
+        function buyNow(projectId) {
+            if (!auth.currentUser) {
+                alert('Please login to purchase');
+                showLoginModal();
+                return;
+            }
+            
+            addToCart(projectId);
+            window.location.href = 'cart.html';
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadProjectDetail);
+    </script>
+</body>
+</html>
