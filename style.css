@@ -10,7 +10,6 @@ body {
     color: #333;
 }
 
-/* Navigation */
 .navbar {
     background: #2c3e50;
     color: white;
@@ -60,7 +59,6 @@ body {
     background: #2980b9;
 }
 
-/* Hero Section */
 .hero {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -93,7 +91,6 @@ body {
     transform: translateY(-3px);
 }
 
-/* Projects Section */
 .projects-section {
     padding: 60px 20px;
     background: #f5f6fa;
@@ -183,7 +180,6 @@ body {
     background: #219a52;
 }
 
-/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -222,14 +218,17 @@ body {
     font-weight: 500;
 }
 
-.form-group input {
+.form-group input, .form-group textarea, .form-group select {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
 }
 
-/* Dashboard Styles */
+.form-group textarea {
+    height: 150px;
+}
+
 .dashboard {
     max-width: 1200px;
     margin: 40px auto;
@@ -272,20 +271,6 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.sell-form input,
-.sell-form textarea,
-.sell-form select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-.sell-form textarea {
-    height: 150px;
-}
-
-/* Cart Styles */
 .cart-page {
     max-width: 1200px;
     margin: 40px auto;
@@ -298,19 +283,11 @@ body {
     gap: 30px;
 }
 
-.cart-items {
+.cart-items, .cart-summary {
     background: white;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.cart-summary {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    height: fit-content;
 }
 
 .cart-item {
@@ -334,7 +311,6 @@ body {
     cursor: pointer;
 }
 
-/* Footer */
 footer {
     background: #2c3e50;
     color: white;
@@ -348,7 +324,6 @@ footer {
     color: #666;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .nav-container {
         flex-direction: column;
